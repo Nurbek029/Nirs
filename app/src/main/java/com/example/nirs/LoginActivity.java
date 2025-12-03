@@ -26,6 +26,12 @@ public class LoginActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
         sharedPreferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
 
+        // Проверяем, если пользователь уже авторизован
+        if (isUserLoggedIn()) {
+            redirectToMain();
+            return;
+        }
+
         // Инициализация элементов
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
@@ -78,9 +84,9 @@ public class LoginActivity extends AppCompatActivity {
                 clearCredentials();
             }
 
-            // Сохраняем ID пользователя
+            // Сохраняем ID пользователя И email
             int userId = dbHelper.getUserId(email);
-            saveUserId(userId);
+            saveUserData(userId, email);
 
             Toast.makeText(this, "Вход выполнен успешно!", Toast.LENGTH_SHORT).show();
 
@@ -93,17 +99,19 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private void saveUserData(int userId, String email) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(Constants.KEY_USER_ID, userId);
+        editor.putString(Constants.KEY_EMAIL, email);
+        editor.putBoolean(Constants.KEY_IS_LOGGED_IN, true); // Флаг авторизации
+        editor.apply();
+    }
+
     private void saveCredentials(String email, String password) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(Constants.KEY_EMAIL, email);
         editor.putString(Constants.KEY_PASSWORD, password);
         editor.putBoolean(Constants.KEY_REMEMBER_ME, true);
-        editor.apply();
-    }
-
-    private void saveUserId(int userId) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(Constants.KEY_USER_ID, userId);
         editor.apply();
     }
 
@@ -123,7 +131,16 @@ public class LoginActivity extends AppCompatActivity {
         editor.remove(Constants.KEY_EMAIL);
         editor.remove(Constants.KEY_PASSWORD);
         editor.remove(Constants.KEY_REMEMBER_ME);
-        editor.remove(Constants.KEY_USER_ID);
         editor.apply();
+    }
+
+    private boolean isUserLoggedIn() {
+        return sharedPreferences.getBoolean(Constants.KEY_IS_LOGGED_IN, false);
+    }
+
+    private void redirectToMain() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

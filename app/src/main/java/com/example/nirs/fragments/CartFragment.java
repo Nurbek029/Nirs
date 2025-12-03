@@ -4,7 +4,6 @@ import static android.content.Context.MODE_PRIVATE;
 
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,17 +44,7 @@ public class CartFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         sharedPreferences = requireContext().getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
-
-        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Toast.makeText(requireContext(), "Возврат в меню", Toast.LENGTH_SHORT).show();
-                setEnabled(false);
-                requireActivity().onBackPressed();
-            }
-        });
     }
 
     @Override
@@ -103,25 +92,29 @@ public class CartFragment extends Fragment {
         if (userId != -1) {
             Cursor cursor = dbHelper.getCartItems(userId);
 
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    CartItem item = new CartItem(
-                            cursor.getInt(cursor.getColumnIndexOrThrow("cart_id")),
-                            cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("name")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
-                            cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
-                            cursor.getInt(cursor.getColumnIndexOrThrow("quantity"))
-                    );
-                    cartItems.add(item);
-                } while (cursor.moveToNext());
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    try {
+                        CartItem item = new CartItem(
+                                cursor.getInt(cursor.getColumnIndexOrThrow("cart_id")),
+                                cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
+                                cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                                cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                                cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
+                                cursor.getInt(cursor.getColumnIndexOrThrow("quantity"))
+                        );
+                        cartItems.add(item);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 cursor.close();
             }
 
             cartAdapter.notifyDataSetChanged();
             updateCartSummary();
         } else {
-            Toast.makeText(getContext(), "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Пожалуйста, войдите в систему", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -138,13 +131,8 @@ public class CartFragment extends Fragment {
         totalPriceText.setText(String.format("%.0f сом", totalPrice));
 
         // Показываем или скрываем кнопку оформления заказа
-        if (totalItems == 0) {
-            checkoutButton.setEnabled(false);
-            checkoutButton.setAlpha(0.5f);
-        } else {
-            checkoutButton.setEnabled(true);
-            checkoutButton.setAlpha(1.0f);
-        }
+        checkoutButton.setEnabled(totalItems > 0);
+        checkoutButton.setAlpha(totalItems > 0 ? 1.0f : 0.5f);
     }
 
     private void removeItemFromCart(int position) {
@@ -153,12 +141,8 @@ public class CartFragment extends Fragment {
             int userId = sharedPreferences.getInt(Constants.KEY_USER_ID, -1);
 
             if (userId != -1) {
-                SQLiteDatabase db = dbHelper.getWritableDatabase();
-                int rowsDeleted = db.delete("cart",
-                        "cart_id = ? AND user_id = ?",
-                        new String[]{String.valueOf(item.getCartId()), String.valueOf(userId)});
-
-                if (rowsDeleted > 0) {
+                boolean success = dbHelper.removeFromCart(item.getCartId(), userId);
+                if (success) {
                     cartItems.remove(position);
                     cartAdapter.notifyItemRemoved(position);
                     updateCartSummary();
@@ -178,7 +162,7 @@ public class CartFragment extends Fragment {
 
         int userId = sharedPreferences.getInt(Constants.KEY_USER_ID, -1);
         if (userId == -1) {
-            Toast.makeText(getContext(), "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Пожалуйста, войдите в систему", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -192,12 +176,8 @@ public class CartFragment extends Fragment {
         long orderId = dbHelper.createOrder(userId, totalAmount, cartItems);
 
         if (orderId != -1) {
-            // Очищаем корзину
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-            int rowsDeleted = db.delete("cart", "user_id = ?", new String[]{String.valueOf(userId)});
-
             Toast.makeText(getContext(),
-                    String.format("Заказ #%d оформлен! Сумма: %.0f сом", orderId, totalAmount),
+                    String.format("Заказ #%d успешно оформлен! Сумма: %.0f сом", orderId, totalAmount),
                     Toast.LENGTH_LONG).show();
 
             // Очистка корзины после оформления

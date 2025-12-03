@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.nav_host_fragment, new MenuFragment())
                     .commit();
+            bottomNavigationView.setSelectedItemId(R.id.menu_menu);
         }
 
         // Обработка двойного нажатия для выхода
@@ -88,11 +89,13 @@ public class MainActivity extends AppCompatActivity {
             };
 
     private boolean isUserLoggedIn() {
-        return sharedPreferences.contains(Constants.KEY_USER_ID);
+        return sharedPreferences.getBoolean(Constants.KEY_IS_LOGGED_IN, false) &&
+                sharedPreferences.contains(Constants.KEY_USER_ID);
     }
 
     private void redirectToLogin() {
         Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }
@@ -104,10 +107,12 @@ public class MainActivity extends AppCompatActivity {
         editor.remove(Constants.KEY_PASSWORD);
         editor.remove(Constants.KEY_REMEMBER_ME);
         editor.remove(Constants.KEY_USER_ID);
+        editor.remove(Constants.KEY_IS_LOGGED_IN);
         editor.apply();
 
         // Переход на экран входа
         Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
     }

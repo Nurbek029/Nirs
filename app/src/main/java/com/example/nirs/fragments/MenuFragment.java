@@ -44,18 +44,7 @@ public class MenuFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         sharedPreferences = requireContext().getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
-
-        // Обработка кнопки назад для фрагмента
-        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Toast.makeText(requireContext(), "Нажмите назад еще раз для выхода из приложения", Toast.LENGTH_SHORT).show();
-                setEnabled(false);
-                requireActivity().onBackPressed();
-            }
-        });
     }
 
     @Override
@@ -95,19 +84,16 @@ public class MenuFragment extends Fragment {
     private void setupCategories() {
         String[] categories = {"Все", "Горячее", "Салаты", "Напитки"};
 
-        // Удаляем старые кнопки если есть
         categoriesContainer.removeAllViews();
 
         for (String category : categories) {
             Button button = new Button(getContext());
             button.setText(category);
-            button.setBackgroundResource(R.drawable.button_category);
-            button.setTextColor(getResources().getColor(R.color.color_primary));
             button.setAllCaps(false);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    getResources().getDimensionPixelSize(R.dimen.button_height)
+                    LinearLayout.LayoutParams.WRAP_CONTENT
             );
             params.setMargins(0, 0, 8, 0);
             button.setLayoutParams(params);
@@ -148,18 +134,22 @@ public class MenuFragment extends Fragment {
         dishList.clear();
         Cursor cursor = dbHelper.getAllDishes();
 
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                Dish dish = new Dish(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("description")),
-                        cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("category")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("image"))
-                );
-                dishList.add(dish);
-            } while (cursor.moveToNext());
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                try {
+                    Dish dish = new Dish(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("category")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("image"))
+                    );
+                    dishList.add(dish);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             cursor.close();
         }
 
@@ -170,18 +160,22 @@ public class MenuFragment extends Fragment {
         dishList.clear();
         Cursor cursor = dbHelper.getDishesByCategory(category);
 
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                Dish dish = new Dish(
-                        cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("description")),
-                        cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("category")),
-                        cursor.getString(cursor.getColumnIndexOrThrow("image"))
-                );
-                dishList.add(dish);
-            } while (cursor.moveToNext());
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                try {
+                    Dish dish = new Dish(
+                            cursor.getInt(cursor.getColumnIndexOrThrow("dish_id")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("description")),
+                            cursor.getDouble(cursor.getColumnIndexOrThrow("price")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("category")),
+                            cursor.getString(cursor.getColumnIndexOrThrow("image"))
+                    );
+                    dishList.add(dish);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             cursor.close();
         }
 
@@ -199,18 +193,15 @@ public class MenuFragment extends Fragment {
                 Toast.makeText(getContext(), "Ошибка добавления в корзину", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(getContext(), "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Пожалуйста, войдите в систему", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void showDishDetailsDialog(Dish dish) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-
-        // Надуваем кастомный layout
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_dish_details, null);
 
-        // Находим элементы в диалоге
-        android.widget.ImageView dishImage = dialogView.findViewById(R.id.dish_image);
+        // Находим элементы
         android.widget.TextView dishName = dialogView.findViewById(R.id.dish_name);
         android.widget.TextView dishPrice = dialogView.findViewById(R.id.dish_price);
         android.widget.TextView cookDate = dialogView.findViewById(R.id.cook_date);
@@ -218,39 +209,52 @@ public class MenuFragment extends Fragment {
         android.widget.TextView dishDescription = dialogView.findViewById(R.id.dish_description);
         android.widget.Button addToCartBtn = dialogView.findViewById(R.id.add_to_cart_btn);
 
-        // Заполняем данные
+        // Заполняем базовые данные
         dishName.setText(dish.getName());
         dishPrice.setText(dish.getFormattedPrice());
 
-        // Получаем полную информацию о блюде
+        // Пробуем получить детали
         Dish fullDish = dbHelper.getDishDetails(dish.getId());
         if (fullDish != null) {
-            if (fullDish.getCookDate() != null) {
-                cookDate.setText("Дата приготовления: " + fullDish.getCookDate());
-            }
-            if (fullDish.getIngredients() != null) {
-                ingredients.setText(fullDish.getIngredients());
-            }
-            if (fullDish.getDescription() != null) {
+            if (fullDish.getDescription() != null && !fullDish.getDescription().isEmpty()) {
                 dishDescription.setText(fullDish.getDescription());
+                dishDescription.setVisibility(View.VISIBLE);
+            } else {
+                dishDescription.setVisibility(View.GONE);
             }
+
+            if (fullDish.getCookDate() != null && !fullDish.getCookDate().isEmpty()) {
+                cookDate.setText("Дата приготовления: " + fullDish.getCookDate());
+                cookDate.setVisibility(View.VISIBLE);
+            } else {
+                cookDate.setVisibility(View.GONE);
+            }
+
+            if (fullDish.getIngredients() != null && !fullDish.getIngredients().isEmpty()) {
+                ingredients.setText(fullDish.getIngredients());
+                ingredients.setVisibility(View.VISIBLE);
+            } else {
+                ingredients.setVisibility(View.GONE);
+            }
+        } else {
+            // Если не получилось загрузить детали, показываем только базовое описание
+            dishDescription.setText(dish.getDescription());
+            cookDate.setVisibility(View.GONE);
+            ingredients.setVisibility(View.GONE);
         }
 
         // Кнопка добавления в корзину
         addToCartBtn.setOnClickListener(v -> {
             addToCart(dish);
-            if (builder != null) {
-                // Закрываем диалог
-                ((AlertDialog) v.getTag()).dismiss();
+            AlertDialog dialog = (AlertDialog) v.getTag();
+            if (dialog != null) {
+                dialog.dismiss();
             }
         });
 
         builder.setView(dialogView);
         AlertDialog dialog = builder.create();
-
-        // Сохраняем ссылку на диалог в кнопке
         addToCartBtn.setTag(dialog);
-
         dialog.show();
     }
 }

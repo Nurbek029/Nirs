@@ -6,4 +6,5 @@ public class Constants {
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_REMEMBER_ME = "remember_me";
     public static final String KEY_USER_ID = "user_id";
+    public static final String KEY_IS_LOGGED_IN = "is_logged_in"; // Добавлено
 }

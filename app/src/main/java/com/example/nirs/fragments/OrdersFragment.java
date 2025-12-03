@@ -42,17 +42,7 @@ public class OrdersFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         sharedPreferences = requireContext().getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
-
-        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Toast.makeText(requireContext(), "Возврат в меню", Toast.LENGTH_SHORT).show();
-                setEnabled(false);
-                requireActivity().onBackPressed();
-            }
-        });
     }
 
     @Override
@@ -82,29 +72,33 @@ public class OrdersFragment extends Fragment {
         if (userId != -1) {
             Cursor cursor = dbHelper.getUserOrders(userId);
 
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    Order order = new Order(
-                            cursor.getInt(cursor.getColumnIndexOrThrow("order_id")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("order_date")),
-                            cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")),
-                            cursor.getString(cursor.getColumnIndexOrThrow("status"))
-                    );
-                    orderList.add(order);
-                } while (cursor.moveToNext());
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    try {
+                        Order order = new Order(
+                                cursor.getInt(cursor.getColumnIndexOrThrow("order_id")),
+                                cursor.getString(cursor.getColumnIndexOrThrow("order_date")),
+                                cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")),
+                                cursor.getString(cursor.getColumnIndexOrThrow("status"))
+                        );
+                        orderList.add(order);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 cursor.close();
             }
 
             if (orderList.isEmpty()) {
                 noOrdersText.setVisibility(View.VISIBLE);
                 ordersRecyclerView.setVisibility(View.GONE);
+                noOrdersText.setText("У вас пока нет заказов");
             } else {
                 noOrdersText.setVisibility(View.GONE);
                 ordersRecyclerView.setVisibility(View.VISIBLE);
                 ordersAdapter.notifyDataSetChanged();
             }
         } else {
-            Toast.makeText(getContext(), "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show();
             noOrdersText.setText("Войдите в аккаунт для просмотра заказов");
             noOrdersText.setVisibility(View.VISIBLE);
             ordersRecyclerView.setVisibility(View.GONE);

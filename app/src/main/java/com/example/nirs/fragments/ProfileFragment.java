@@ -5,7 +5,6 @@ import static android.content.Context.MODE_PRIVATE;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,18 +40,8 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         sharedPreferences = requireContext().getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
         dbHelper = new DatabaseHelper(getContext());
-
-        requireActivity().getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                Toast.makeText(requireContext(), "Возврат в меню", Toast.LENGTH_SHORT).show();
-                setEnabled(false);
-                requireActivity().onBackPressed();
-            }
-        });
     }
 
     @SuppressLint("MissingInflatedId")
@@ -69,9 +58,7 @@ public class ProfileFragment extends Fragment {
 
         loadUserProfile();
 
-        logoutButton.setOnClickListener(v -> {
-            logout();
-        });
+        logoutButton.setOnClickListener(v -> logout());
 
         return view;
     }
@@ -80,18 +67,16 @@ public class ProfileFragment extends Fragment {
         String email = sharedPreferences.getString(Constants.KEY_EMAIL, "");
         int userId = sharedPreferences.getInt(Constants.KEY_USER_ID, -1);
 
-        if (!email.isEmpty()) {
+        if (!email.isEmpty() && userId != -1) {
             userEmail.setText(email);
 
-            // Дата регистрации (можно сохранять при регистрации, пока используем текущую дату)
+            // Дата регистрации (текущая дата)
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
             String currentDate = sdf.format(new Date());
             memberSince.setText("Пользователь с " + currentDate);
 
             // Загружаем статистику
-            if (userId != -1) {
-                loadUserStats(userId);
-            }
+            loadUserStats(userId);
         } else {
             userEmail.setText("Не авторизован");
             memberSince.setText("");
@@ -102,30 +87,16 @@ public class ProfileFragment extends Fragment {
 
     private void loadUserStats(int userId) {
         try {
-            // Получаем количество заказов
-            Cursor ordersCursor = dbHelper.getUserOrders(userId);
-            int ordersCount = 0;
-            double totalAmount = 0;
-
-            if (ordersCursor != null) {
-                ordersCount = ordersCursor.getCount();
-
-                // Рассчитываем общую сумму
-                if (ordersCursor.moveToFirst()) {
-                    do {
-                        totalAmount += ordersCursor.getDouble(ordersCursor.getColumnIndexOrThrow("total_amount"));
-                    } while (ordersCursor.moveToNext());
-                }
-                ordersCursor.close();
-            }
+            int ordersCount = dbHelper.getOrderCount(userId);
+            double totalAmount = dbHelper.getTotalSpent(userId);
 
             totalOrders.setText(String.valueOf(ordersCount));
-            totalSpent.setText(String.format("%.0f", totalAmount));
+            totalSpent.setText(String.format("%.0f сом", totalAmount));
 
         } catch (Exception e) {
             e.printStackTrace();
             totalOrders.setText("0");
-            totalSpent.setText("0");
+            totalSpent.setText("0 сом");
         }
     }
 

@@ -5,16 +5,18 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.example.nirs.entity.CartItem;
 import com.example.nirs.entity.Dish;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "Nirs.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3; // Увеличиваем версию
 
     // Таблица пользователей
     private static final String TABLE_USERS = "users";
@@ -62,20 +64,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        createTables(db);
+        insertSampleData(db);
+    }
+
+    private void createTables(SQLiteDatabase db) {
         // Создание таблицы пользователей
         String CREATE_USERS_TABLE = "CREATE TABLE " + TABLE_USERS + "("
                 + COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_EMAIL + " TEXT UNIQUE,"
-                + COLUMN_PASSWORD + " TEXT" + ")";
+                + COLUMN_EMAIL + " TEXT UNIQUE NOT NULL,"
+                + COLUMN_PASSWORD + " TEXT NOT NULL" + ")";
         db.execSQL(CREATE_USERS_TABLE);
 
         // Создание таблицы блюд
         String CREATE_DISHES_TABLE = "CREATE TABLE " + TABLE_DISHES + "("
                 + COLUMN_DISH_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_DISH_NAME + " TEXT,"
+                + COLUMN_DISH_NAME + " TEXT NOT NULL,"
                 + COLUMN_DISH_DESCRIPTION + " TEXT,"
-                + COLUMN_DISH_PRICE + " REAL,"
-                + COLUMN_DISH_CATEGORY + " TEXT,"
+                + COLUMN_DISH_PRICE + " REAL NOT NULL,"
+                + COLUMN_DISH_CATEGORY + " TEXT NOT NULL,"
                 + COLUMN_DISH_IMAGE + " TEXT,"
                 + COLUMN_DISH_INGREDIENTS + " TEXT,"
                 + COLUMN_DISH_COOK_DATE + " TEXT" + ")";
@@ -84,45 +91,85 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Создание таблицы корзины
         String CREATE_CART_TABLE = "CREATE TABLE " + TABLE_CART + "("
                 + COLUMN_CART_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_CART_USER_ID + " INTEGER,"
-                + COLUMN_CART_DISH_ID + " INTEGER,"
-                + COLUMN_QUANTITY + " INTEGER" + ")";
+                + COLUMN_CART_USER_ID + " INTEGER NOT NULL,"
+                + COLUMN_CART_DISH_ID + " INTEGER NOT NULL,"
+                + COLUMN_QUANTITY + " INTEGER DEFAULT 1,"
+                + "FOREIGN KEY(" + COLUMN_CART_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + "),"
+                + "FOREIGN KEY(" + COLUMN_CART_DISH_ID + ") REFERENCES " + TABLE_DISHES + "(" + COLUMN_DISH_ID + ")"
+                + ")";
         db.execSQL(CREATE_CART_TABLE);
 
         // Создание таблицы заказов
         String CREATE_ORDERS_TABLE = "CREATE TABLE " + TABLE_ORDERS + "("
                 + COLUMN_ORDER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_ORDER_USER_ID + " INTEGER,"
+                + COLUMN_ORDER_USER_ID + " INTEGER NOT NULL,"
                 + COLUMN_ORDER_DATE + " DATETIME DEFAULT CURRENT_TIMESTAMP,"
-                + COLUMN_ORDER_TOTAL + " REAL,"
-                + COLUMN_ORDER_STATUS + " TEXT DEFAULT 'Новый'" + ")";
+                + COLUMN_ORDER_TOTAL + " REAL NOT NULL,"
+                + COLUMN_ORDER_STATUS + " TEXT DEFAULT 'Новый',"
+                + "FOREIGN KEY(" + COLUMN_ORDER_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + ")"
+                + ")";
         db.execSQL(CREATE_ORDERS_TABLE);
 
         // Создание таблицы деталей заказа
         String CREATE_ORDER_ITEMS_TABLE = "CREATE TABLE " + TABLE_ORDER_ITEMS + "("
                 + COLUMN_ORDER_ITEM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_ORDER_ITEM_ORDER_ID + " INTEGER,"
-                + COLUMN_ORDER_ITEM_DISH_ID + " INTEGER,"
-                + COLUMN_ORDER_ITEM_QUANTITY + " INTEGER,"
-                + COLUMN_ORDER_ITEM_PRICE + " REAL" + ")";
+                + COLUMN_ORDER_ITEM_ORDER_ID + " INTEGER NOT NULL,"
+                + COLUMN_ORDER_ITEM_DISH_ID + " INTEGER NOT NULL,"
+                + COLUMN_ORDER_ITEM_QUANTITY + " INTEGER NOT NULL,"
+                + COLUMN_ORDER_ITEM_PRICE + " REAL NOT NULL,"
+                + "FOREIGN KEY(" + COLUMN_ORDER_ITEM_ORDER_ID + ") REFERENCES " + TABLE_ORDERS + "(" + COLUMN_ORDER_ID + "),"
+                + "FOREIGN KEY(" + COLUMN_ORDER_ITEM_DISH_ID + ") REFERENCES " + TABLE_DISHES + "(" + COLUMN_DISH_ID + ")"
+                + ")";
         db.execSQL(CREATE_ORDER_ITEMS_TABLE);
+    }
 
-        // Добавление тестовых данных
-        insertSampleDishes(db);
-        insertSampleUser(db);
+    private void insertSampleData(SQLiteDatabase db) {
+        // Добавляем тестового пользователя
+        ContentValues userValues = new ContentValues();
+        userValues.put(COLUMN_EMAIL, "test@test.com");
+        userValues.put(COLUMN_PASSWORD, "123456");
+        db.insert(TABLE_USERS, null, userValues);
+
+        // Добавляем тестовые блюда
+        String[][] dishes = {
+                {"Борщ", "Традиционный украинский борщ со сметаной", "75", "Горячее", "Свекла, капуста, картофель, морковь, мясо", "borsch.jpg", "2024-11-25"},
+                {"Плов", "Узбекский плов с бараниной", "120", "Горячее", "Рис, баранина, морковь, лук, специи", "plov.jpg", "2024-11-25"},
+                {"Котлета по-киевски", "Куриная котлета с маслом", "95", "Горячее", "Куриное филе, масло, зелень, панировка", "kotleta.jpg", "2024-11-25"},
+                {"Цезарь", "Салат Цезарь с курицей", "80", "Салаты", "Курица, салат, сухарики, сыр, соус", "caesar.jpg", "2024-11-25"},
+                {"Оливье", "Традиционный салат Оливье", "70", "Салаты", "Картофель, морковь, колбаса, яйца, горошек", "olivie.jpg", "2024-11-25"},
+                {"Чай черный", "Черный чай с сахаром", "25", "Напитки", "Чайные листья, вода", "tea.jpg", "2024-11-25"},
+                {"Кофе американо", "Классический американо", "35", "Напитки", "Кофейные зерна, вода", "coffee.jpg", "2024-11-25"}
+        };
+
+        for (String[] dish : dishes) {
+            ContentValues dishValues = new ContentValues();
+            dishValues.put(COLUMN_DISH_NAME, dish[0]);
+            dishValues.put(COLUMN_DISH_DESCRIPTION, dish[1]);
+            dishValues.put(COLUMN_DISH_PRICE, Double.parseDouble(dish[2]));
+            dishValues.put(COLUMN_DISH_CATEGORY, dish[3]);
+            dishValues.put(COLUMN_DISH_INGREDIENTS, dish[4]);
+            dishValues.put(COLUMN_DISH_IMAGE, dish[5]);
+            dishValues.put(COLUMN_DISH_COOK_DATE, dish[6]);
+            db.insert(TABLE_DISHES, null, dishValues);
+        }
+
+        Log.d("DatabaseHelper", "Sample data inserted successfully");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DISHES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+        // Удаляем старые таблицы
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ITEMS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DISHES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+
+        // Создаем заново
         onCreate(db);
     }
 
-    // Добавление пользователя
+    // ============ ПОЛЬЗОВАТЕЛИ ============
     public boolean addUser(String email, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -133,215 +180,262 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             long result = db.insert(TABLE_USERS, null, values);
             return result != -1;
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("DatabaseHelper", "Error adding user: " + e.getMessage());
             return false;
         }
     }
 
-    // Проверка пользователя
     public boolean checkUser(String email, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {COLUMN_USER_ID};
         String selection = COLUMN_EMAIL + " = ? AND " + COLUMN_PASSWORD + " = ?";
         String[] selectionArgs = {email, password};
 
-        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs,
-                null, null, null);
-
-        int count = cursor.getCount();
+        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+        boolean exists = cursor.getCount() > 0;
         cursor.close();
-        return count > 0;
+        return exists;
     }
 
-    // Проверка существования email
     public boolean isEmailExists(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {COLUMN_USER_ID};
         String selection = COLUMN_EMAIL + " = ?";
         String[] selectionArgs = {email};
 
-        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs,
-                null, null, null);
-
-        int count = cursor.getCount();
+        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+        boolean exists = cursor.getCount() > 0;
         cursor.close();
-        return count > 0;
+        return exists;
     }
 
-    // Получение ID пользователя по email
     public int getUserId(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {COLUMN_USER_ID};
         String selection = COLUMN_EMAIL + " = ?";
         String[] selectionArgs = {email};
 
-        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs,
-                null, null, null);
+        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
 
         int userId = -1;
-        if (cursor != null && cursor.moveToFirst()) {
+        if (cursor.moveToFirst()) {
             userId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_USER_ID));
-            cursor.close();
         }
+        cursor.close();
+
         return userId;
     }
 
-    // Добавление тестовых блюд
-    private void insertSampleDishes(SQLiteDatabase db) {
-        // Горячие блюда
-        insertDish(db, "Борщ", "Традиционный украинский борщ со сметаной", 75.0, "Горячее",
-                "Свекла, капуста, картофель, морковь, мясо", "borsch.jpg", "2024-11-25");
-        insertDish(db, "Плов", "Узбекский плов с бараниной", 120.0, "Горячее",
-                "Рис, баранина, морковь, лук, специи", "plov.jpg", "2024-11-25");
-        insertDish(db, "Котлета по-киевски", "Куриная котлета с маслом", 95.0, "Горячее",
-                "Куриное филе, масло, зелень, панировка", "kotleta.jpg", "2024-11-25");
-
-        // Салаты
-        insertDish(db, "Цезарь", "Салат Цезарь с курицей", 80.0, "Салаты",
-                "Курица, салат, сухарики, сыр, соус", "caesar.jpg", "2024-11-25");
-        insertDish(db, "Оливье", "Традиционный салат Оливье", 70.0, "Салаты",
-                "Картофель, морковь, колбаса, яйца, горошек", "olivie.jpg", "2024-11-25");
-
-        // Напитки
-        insertDish(db, "Чай черный", "Черный чай с сахаром", 25.0, "Напитки",
-                "Чайные листья, вода", "tea.jpg", "2024-11-25");
-        insertDish(db, "Кофе американо", "Классический американо", 35.0, "Напитки",
-                "Кофейные зерна, вода", "coffee.jpg", "2024-11-25");
-    }
-
-    // Добавление тестового пользователя
-    private void insertSampleUser(SQLiteDatabase db) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_EMAIL, "test@test.com");
-        values.put(COLUMN_PASSWORD, "123456");
-        db.insert(TABLE_USERS, null, values);
-    }
-
-    private void insertDish(SQLiteDatabase db, String name, String description,
-                            double price, String category, String ingredients,
-                            String image, String cookDate) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_DISH_NAME, name);
-        values.put(COLUMN_DISH_DESCRIPTION, description);
-        values.put(COLUMN_DISH_PRICE, price);
-        values.put(COLUMN_DISH_CATEGORY, category);
-        values.put(COLUMN_DISH_INGREDIENTS, ingredients);
-        values.put(COLUMN_DISH_IMAGE, image);
-        values.put(COLUMN_DISH_COOK_DATE, cookDate);
-        db.insert(TABLE_DISHES, null, values);
-    }
-
-    // Получение всех блюд
+    // ============ БЛЮДА ============
     public Cursor getAllDishes() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_DISHES, null, null, null, null, null, null);
+        return db.query(TABLE_DISHES, null, null, null, null, null, COLUMN_DISH_NAME + " ASC");
     }
 
-    // Получение блюд по категории
     public Cursor getDishesByCategory(String category) {
         SQLiteDatabase db = this.getReadableDatabase();
         String selection = COLUMN_DISH_CATEGORY + " = ?";
         String[] selectionArgs = {category};
-        return db.query(TABLE_DISHES, null, selection, selectionArgs, null, null, null);
+        return db.query(TABLE_DISHES, null, selection, selectionArgs, null, null, COLUMN_DISH_NAME + " ASC");
     }
 
-    // Получение деталей блюда
     public Dish getDishDetails(int dishId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COLUMN_DISH_ID, COLUMN_DISH_NAME, COLUMN_DISH_DESCRIPTION,
-                COLUMN_DISH_PRICE, COLUMN_DISH_CATEGORY, COLUMN_DISH_IMAGE,
-                COLUMN_DISH_INGREDIENTS, COLUMN_DISH_COOK_DATE};
         String selection = COLUMN_DISH_ID + " = ?";
         String[] selectionArgs = {String.valueOf(dishId)};
 
-        Cursor cursor = db.query(TABLE_DISHES, columns, selection, selectionArgs,
-                null, null, null);
+        Cursor cursor = db.query(TABLE_DISHES, null, selection, selectionArgs, null, null, null);
 
         Dish dish = null;
         if (cursor != null && cursor.moveToFirst()) {
-            dish = new Dish(
-                    cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DISH_ID)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_NAME)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_DESCRIPTION)),
-                    cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_DISH_PRICE)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_CATEGORY)),
-                    cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_IMAGE))
-            );
-            dish.setIngredients(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_INGREDIENTS)));
-            dish.setCookDate(cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_COOK_DATE)));
+            try {
+                dish = new Dish(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_DISH_ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_NAME)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_DESCRIPTION)),
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(COLUMN_DISH_PRICE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_CATEGORY)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DISH_IMAGE))
+                );
+
+                int ingredientsIndex = cursor.getColumnIndex(COLUMN_DISH_INGREDIENTS);
+                if (ingredientsIndex != -1) {
+                    dish.setIngredients(cursor.getString(ingredientsIndex));
+                }
+
+                int cookDateIndex = cursor.getColumnIndex(COLUMN_DISH_COOK_DATE);
+                if (cookDateIndex != -1) {
+                    dish.setCookDate(cursor.getString(cookDateIndex));
+                }
+            } catch (Exception e) {
+                Log.e("DatabaseHelper", "Error getting dish details: " + e.getMessage());
+            }
+        }
+
+        if (cursor != null) {
             cursor.close();
         }
+
         return dish;
     }
 
-    // Добавление в корзину
+    // ============ КОРЗИНА ============
     public boolean addToCart(int userId, int dishId, int quantity) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_CART_USER_ID, userId);
-        values.put(COLUMN_CART_DISH_ID, dishId);
-        values.put(COLUMN_QUANTITY, quantity);
 
-        long result = db.insert(TABLE_CART, null, values);
-        return result != -1;
+        // Проверяем, есть ли уже такой товар в корзине
+        Cursor cursor = db.query(TABLE_CART,
+                new String[]{COLUMN_CART_ID, COLUMN_QUANTITY},
+                COLUMN_CART_USER_ID + " = ? AND " + COLUMN_CART_DISH_ID + " = ?",
+                new String[]{String.valueOf(userId), String.valueOf(dishId)},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            // Товар уже есть - обновляем количество
+            int cartId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CART_ID));
+            int existingQuantity = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_QUANTITY));
+            cursor.close();
+
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_QUANTITY, existingQuantity + quantity);
+
+            int rowsAffected = db.update(TABLE_CART, values,
+                    COLUMN_CART_ID + " = ?",
+                    new String[]{String.valueOf(cartId)});
+            return rowsAffected > 0;
+        } else {
+            if (cursor != null) {
+                cursor.close();
+            }
+            // Товара нет - добавляем новый
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_CART_USER_ID, userId);
+            values.put(COLUMN_CART_DISH_ID, dishId);
+            values.put(COLUMN_QUANTITY, quantity);
+
+            long result = db.insert(TABLE_CART, null, values);
+            return result != -1;
+        }
     }
 
-    // Получение корзины пользователя
     public Cursor getCartItems(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT c.*, d." + COLUMN_DISH_NAME + ", d." + COLUMN_DISH_PRICE +
-                ", d." + COLUMN_DISH_DESCRIPTION +
-                " FROM " + TABLE_CART + " c " +
-                " INNER JOIN " + TABLE_DISHES + " d ON c." + COLUMN_CART_DISH_ID +
-                " = d." + COLUMN_DISH_ID +
-                " WHERE c." + COLUMN_CART_USER_ID + " = ?";
+        String query = "SELECT c.cart_id, c.dish_id, c.quantity, " +
+                "d.name, d.description, d.price " +
+                "FROM " + TABLE_CART + " c " +
+                "INNER JOIN " + TABLE_DISHES + " d ON c.dish_id = d.dish_id " +
+                "WHERE c.user_id = ?";
         return db.rawQuery(query, new String[]{String.valueOf(userId)});
     }
 
-    // Создание заказа
+    public boolean removeFromCart(int cartId, int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsDeleted = db.delete(TABLE_CART,
+                COLUMN_CART_ID + " = ? AND " + COLUMN_CART_USER_ID + " = ?",
+                new String[]{String.valueOf(cartId), String.valueOf(userId)});
+        return rowsDeleted > 0;
+    }
+
+    public void clearCart(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_CART, COLUMN_CART_USER_ID + " = ?",
+                new String[]{String.valueOf(userId)});
+    }
+
+    // ============ ЗАКАЗЫ ============
     public long createOrder(int userId, double totalAmount, List<CartItem> cartItems) {
         SQLiteDatabase db = this.getWritableDatabase();
 
-        // Создаем заказ
-        ContentValues orderValues = new ContentValues();
-        orderValues.put(COLUMN_ORDER_USER_ID, userId);
-        orderValues.put(COLUMN_ORDER_TOTAL, totalAmount);
-        orderValues.put(COLUMN_ORDER_STATUS, "Завершен");
+        try {
+            db.beginTransaction();
 
-        long orderId = db.insert(TABLE_ORDERS, null, orderValues);
+            // 1. Создаем заказ
+            ContentValues orderValues = new ContentValues();
+            orderValues.put(COLUMN_ORDER_USER_ID, userId);
+            orderValues.put(COLUMN_ORDER_TOTAL, totalAmount);
+            orderValues.put(COLUMN_ORDER_STATUS, "Новый");
 
-        if (orderId != -1) {
-            // Добавляем товары в заказ
+            long orderId = db.insert(TABLE_ORDERS, null, orderValues);
+
+            if (orderId == -1) {
+                db.endTransaction();
+                return -1;
+            }
+
+            // 2. Добавляем товары в заказ
             for (CartItem item : cartItems) {
                 ContentValues itemValues = new ContentValues();
                 itemValues.put(COLUMN_ORDER_ITEM_ORDER_ID, orderId);
                 itemValues.put(COLUMN_ORDER_ITEM_DISH_ID, item.getDishId());
                 itemValues.put(COLUMN_ORDER_ITEM_QUANTITY, item.getQuantity());
                 itemValues.put(COLUMN_ORDER_ITEM_PRICE, item.getPrice());
-                db.insert(TABLE_ORDER_ITEMS, null, itemValues);
-            }
-        }
 
-        return orderId;
+                long itemResult = db.insert(TABLE_ORDER_ITEMS, null, itemValues);
+                if (itemResult == -1) {
+                    Log.e("DatabaseHelper", "Failed to insert order item");
+                }
+            }
+
+            // 3. Очищаем корзину
+            clearCart(userId);
+
+            db.setTransactionSuccessful();
+            return orderId;
+
+        } catch (Exception e) {
+            Log.e("DatabaseHelper", "Error creating order: " + e.getMessage());
+            e.printStackTrace();
+            return -1;
+        } finally {
+            db.endTransaction();
+        }
     }
 
-    // Получение заказов пользователя
     public Cursor getUserOrders(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM " + TABLE_ORDERS +
-                " WHERE " + COLUMN_ORDER_USER_ID + " = ?" +
-                " ORDER BY " + COLUMN_ORDER_DATE + " DESC";
+        String query = "SELECT order_id, order_date, total_amount, status " +
+                "FROM " + TABLE_ORDERS + " " +
+                "WHERE user_id = ? " +
+                "ORDER BY order_date DESC";
         return db.rawQuery(query, new String[]{String.valueOf(userId)});
     }
 
-    // Получение деталей заказа
     public Cursor getOrderItems(long orderId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT oi.*, d." + COLUMN_DISH_NAME +
-                " FROM " + TABLE_ORDER_ITEMS + " oi" +
-                " INNER JOIN " + TABLE_DISHES + " d ON oi." + COLUMN_ORDER_ITEM_DISH_ID +
-                " = d." + COLUMN_DISH_ID +
-                " WHERE oi." + COLUMN_ORDER_ITEM_ORDER_ID + " = ?";
+        String query = "SELECT oi.*, d.name " +
+                "FROM " + TABLE_ORDER_ITEMS + " oi " +
+                "INNER JOIN " + TABLE_DISHES + " d ON oi.dish_id = d.dish_id " +
+                "WHERE oi.order_id = ?";
         return db.rawQuery(query, new String[]{String.valueOf(orderId)});
+    }
+
+    public int getOrderCount(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM " + TABLE_ORDERS +
+                " WHERE user_id = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+
+        return count;
+    }
+
+    public double getTotalSpent(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT SUM(total_amount) FROM " + TABLE_ORDERS +
+                " WHERE user_id = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+
+        double total = 0;
+        if (cursor.moveToFirst()) {
+            total = cursor.getDouble(0);
+        }
+        cursor.close();
+
+        return total;
     }
 }
