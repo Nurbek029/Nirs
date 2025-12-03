@@ -1,13 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Nirs</string>
+    <string name="app_name">NIRS</string>
     <string name="welcome">Добро пожаловать</string>
     <string name="login">Войти</string>
     <string name="register">Зарегистрироваться</string>
-    <string name="menu_title">Меню</string>
-    <string name="cart_title">Корзина</string>
-    <string name="orders_title">Заказы</string>
-    <string name="promotions_title">Акции</string>
-    <string name="profile_title">Профиль</string>
-    <string name="add_to_cart">В корзину</string>
-    <string name="checkout">Перейти к оформлению</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Пароль</string>
+    <string name="confirm_password_hint">Повторите пароль</string>
+    <string name="remember_me">Запомнить меня</string>
+    <string name="terms_agree">Я согласен с Условиями использования</string>
+    <string name="already_have_account">Уже есть аккаунт? Войти</string>
+
+    <!-- Menu -->
+    <string name="menu">Меню</string>
+    <string name="cart">Корзина</string>
+    <string name="orders">Заказы</string>
+    <string name="profile">Профиль</string>
+    <string name="promotions">Акции</string>
 </resources>
