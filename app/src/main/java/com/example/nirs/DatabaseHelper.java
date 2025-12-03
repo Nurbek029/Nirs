@@ -400,15 +400,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery(query, new String[]{String.valueOf(userId)});
     }
 
-    public Cursor getOrderItems(long orderId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT oi.*, d.name " +
-                "FROM " + TABLE_ORDER_ITEMS + " oi " +
-                "INNER JOIN " + TABLE_DISHES + " d ON oi.dish_id = d.dish_id " +
-                "WHERE oi.order_id = ?";
-        return db.rawQuery(query, new String[]{String.valueOf(orderId)});
-    }
-
     public int getOrderCount(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT COUNT(*) FROM " + TABLE_ORDERS +
@@ -423,7 +414,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return count;
     }
+// Добавьте в класс DatabaseHelper:
 
+    public Cursor getOrderDetails(long orderId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT oi.quantity, oi.price_at_order, d.name " +
+                "FROM " + TABLE_ORDER_ITEMS + " oi " +
+                "INNER JOIN " + TABLE_DISHES + " d ON oi.dish_id = d.dish_id " +
+                "WHERE oi.order_id = ?";
+        return db.rawQuery(query, new String[]{String.valueOf(orderId)});
+    }
+
+    // И обновите метод getOrderItems для совместимости:
+    public Cursor getOrderItems(long orderId) {
+        return getOrderDetails(orderId); // Просто вызываем новый метод
+    }
     public double getTotalSpent(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT SUM(total_amount) FROM " + TABLE_ORDERS +

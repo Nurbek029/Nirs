@@ -15,9 +15,19 @@ import java.util.List;
 public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewHolder> {
 
     private List<Order> orderList;
+    private OnOrderClickListener listener;
+
+    public interface OnOrderClickListener {
+        void onOrderClick(int position);
+    }
 
     public OrdersAdapter(List<Order> orderList) {
         this.orderList = orderList;
+    }
+
+    public OrdersAdapter(List<Order> orderList, OnOrderClickListener listener) {
+        this.orderList = orderList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -39,20 +49,27 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewH
         // Устанавливаем цвет статуса
         switch (order.getStatus()) {
             case "Новый":
-                holder.orderStatus.setTextColor(0xFF2196F3); // Синий
+                holder.orderStatus.setTextColor(0xFF2196F3);
                 break;
             case "В процессе":
-                holder.orderStatus.setTextColor(0xFFFF9800); // Оранжевый
+                holder.orderStatus.setTextColor(0xFFFF9800);
                 break;
             case "Завершен":
-                holder.orderStatus.setTextColor(0xFF4CAF50); // Зеленый
+                holder.orderStatus.setTextColor(0xFF4CAF50);
                 break;
             case "Отменен":
-                holder.orderStatus.setTextColor(0xFFF44336); // Красный
+                holder.orderStatus.setTextColor(0xFFF44336);
                 break;
             default:
-                holder.orderStatus.setTextColor(0xFF757575); // Серый
+                holder.orderStatus.setTextColor(0xFF757575);
         }
+
+        // Обработка клика на элемент
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onOrderClick(position);
+            }
+        });
     }
 
     @Override
