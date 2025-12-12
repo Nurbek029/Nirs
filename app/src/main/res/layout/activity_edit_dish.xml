@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/sbag"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Заголовок -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"
+            android:text="Редактирование блюда"
+            android:textColor="#1B5E20"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <!-- Изображение -->
+        <ImageView
+            android:id="@+id/iv_dish_image"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:background="#E0E0E0"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Кнопки фото -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btn_take_photo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Сделать фото"
+                android:backgroundTint="#1B5E20"
+                android:textColor="@android:color/white" />
+
+            <Button
+                android:id="@+id/btn_pick_photo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Выбрать из галереи"
+                android:backgroundTint="#1B5E20"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+        <!-- Название -->
+        <EditText
+            android:id="@+id/et_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Название блюда"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp"
+            android:background="@android:color/white" />
+
+        <!-- Описание -->
+        <EditText
+            android:id="@+id/et_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Описание"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp"
+            android:background="@android:color/white" />
+
+        <!-- Цена -->
+        <EditText
+            android:id="@+id/et_price"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Цена (сом)"
+            android:inputType="numberDecimal"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp"
+            android:background="@android:color/white" />
+
+        <!-- Категория -->
+        <Spinner
+            android:id="@+id/sp_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@android:color/white"
+            android:padding="8dp" />
+
+        <!-- Ингредиенты -->
+        <EditText
+            android:id="@+id/et_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Ингредиенты"
+            android:layout_marginBottom="24dp"
+            android:padding="12dp"
+            android:background="@android:color/white" />
+
+        <!-- Кнопки действий -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Кнопка ОБНОВИТЬ -->
+            <Button
+                android:id="@+id/btn_update"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Обновить"
+                android:backgroundTint="#4CAF50"
+                android:textColor="@android:color/white" />
+
+            <!-- Кнопка УДАЛИТЬ -->
+            <Button
+                android:id="@+id/btn_delete"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:text="Удалить"
+                android:backgroundTint="#F44336"
+                android:textColor="@android:color/white" />
+
+            <!-- Кнопка ОТМЕНА -->
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="Отмена"
+                android:backgroundTint="#757575"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>
