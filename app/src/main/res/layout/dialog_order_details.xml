@@ -9,7 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/order_number_title"
@@ -23,6 +23,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- ПОЛЬЗОВАТЕЛЬ (для админа) -->
+        <TextView
+            android:id="@+id/user_email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Пользователь: test@example.com"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/order_number_title" />
+
         <TextView
             android:id="@+id/order_number"
             android:layout_width="wrap_content"
@@ -34,7 +48,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/order_number_title" />
+            app:layout_constraintTop_toBottomOf="@id/user_email" />
 
         <TextView
             android:id="@+id/order_date"
@@ -71,6 +85,42 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/order_status" />
 
+        <TextView
+            android:id="@+id/payment_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Чек оплаты:"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/order_total" />
+
+        <ImageView
+            android:id="@+id/iv_payment_proof"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            android:background="#E0E0E0"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/payment_title" />
+
+        <Button
+            android:id="@+id/btn_add_payment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#1B5E20"
+            android:text="Добавить чек оплаты"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/payment_title" />
+
         <View
             android:id="@+id/divider"
             android:layout_width="0dp"
@@ -79,7 +129,7 @@
             android:background="#E0E0E0"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/order_total" />
+            app:layout_constraintTop_toBottomOf="@+id/iv_payment_proof" />
 
         <TextView
             android:id="@+id/items_title"

@@ -21,10 +21,6 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewH
         void onOrderClick(int position);
     }
 
-    public OrdersAdapter(List<Order> orderList) {
-        this.orderList = orderList;
-    }
-
     public OrdersAdapter(List<Order> orderList, OnOrderClickListener listener) {
         this.orderList = orderList;
         this.listener = listener;
@@ -41,28 +37,14 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewH
     @Override
     public void onBindViewHolder(@NonNull OrderViewHolder holder, int position) {
         Order order = orderList.get(position);
+
         holder.orderNumber.setText("Заказ #" + order.getId());
         holder.orderDate.setText(order.getFormattedDate());
         holder.orderTotal.setText(order.getFormattedTotal());
         holder.orderStatus.setText(order.getStatus());
 
         // Устанавливаем цвет статуса
-        switch (order.getStatus()) {
-            case "Новый":
-                holder.orderStatus.setTextColor(0xFF2196F3);
-                break;
-            case "В процессе":
-                holder.orderStatus.setTextColor(0xFFFF9800);
-                break;
-            case "Завершен":
-                holder.orderStatus.setTextColor(0xFF4CAF50);
-                break;
-            case "Отменен":
-                holder.orderStatus.setTextColor(0xFFF44336);
-                break;
-            default:
-                holder.orderStatus.setTextColor(0xFF757575);
-        }
+        holder.orderStatus.setTextColor(order.getStatusColor());
 
         // Обработка клика на элемент
         holder.itemView.setOnClickListener(v -> {
@@ -74,7 +56,7 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrderViewH
 
     @Override
     public int getItemCount() {
-        return orderList.size();
+        return orderList != null ? orderList.size() : 0;
     }
 
     static class OrderViewHolder extends RecyclerView.ViewHolder {

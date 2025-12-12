@@ -10,6 +10,8 @@ public class Order {
     private String date;
     private double total;
     private String status;
+    private String paymentProof;
+    private String userEmail;
 
     public Order(int id, String date, double total, String status) {
         this.id = id;
@@ -19,38 +21,20 @@ public class Order {
     }
 
     // Getters
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public String getDate() { return date; }
+    public double getTotal() { return total; }
+    public String getStatus() { return status; }
+    public String getPaymentProof() { return paymentProof; }
+    public String getUserEmail() { return userEmail; }
 
-    public String getDate() {
-        return date;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    // Setters (если понадобятся)
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    // Setters
+    public void setId(int id) { this.id = id; }
+    public void setDate(String date) { this.date = date; }
+    public void setTotal(double total) { this.total = total; }
+    public void setStatus(String status) { this.status = status; }
+    public void setPaymentProof(String paymentProof) { this.paymentProof = paymentProof; }
+    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
 
     // Метод для форматирования даты
     public String getFormattedDate() {
@@ -59,7 +43,6 @@ public class Order {
         }
 
         try {
-            // Пробуем разные форматы дат
             SimpleDateFormat[] inputFormats = {
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()),
                     new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()),
@@ -93,51 +76,25 @@ public class Order {
         return String.format(Locale.getDefault(), "%.0f сом", total);
     }
 
-    // Метод для получения статуса с цветом (возвращает цвет в формате ARGB)
+    // Метод для получения статуса с цветом
     public int getStatusColor() {
         if (status == null) {
-            return 0xFF757575; // Серый по умолчанию
+            return 0xFF757575;
         }
 
         switch (status.toLowerCase()) {
-            case "новый":
-                return 0xFF2196F3; // Синий
-            case "в процессе":
             case "в обработке":
-                return 0xFFFF9800; // Оранжевый
+                return 0xFF2196F3;
+            case "принятый":
+                return 0xFFFF9800;
+            case "готов":
+                return 0xFF4CAF50;
             case "завершен":
-            case "выполнен":
-                return 0xFF4CAF50; // Зеленый
+                return 0xFF4CAF50;
             case "отменен":
-            case "отменён":
-                return 0xFFF44336; // Красный
-            case "доставляется":
-                return 0xFF9C27B0; // Фиолетовый
+                return 0xFFF44336;
             default:
-                return 0xFF757575; // Серый
-        }
-    }
-
-    // Метод для получения короткого статуса
-    public String getShortStatus() {
-        if (status == null) return "?";
-
-        switch (status.toLowerCase()) {
-            case "новый":
-                return "Новый";
-            case "в процессе":
-            case "в обработке":
-                return "В процессе";
-            case "завершен":
-            case "выполнен":
-                return "Завершен";
-            case "отменен":
-            case "отменён":
-                return "Отменен";
-            case "доставляется":
-                return "Доставляется";
-            default:
-                return status;
+                return 0xFF757575;
         }
     }
 

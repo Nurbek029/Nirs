@@ -3,6 +3,7 @@ package com.example.nirs;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -16,7 +17,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button loginButton, registerButton;
     private CheckBox rememberMeCheckbox;
     private DatabaseHelper dbHelper;
-    private SharedPreferences sharedPreferences;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,10 +25,17 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         dbHelper = new DatabaseHelper(this);
-        sharedPreferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
+        sessionManager = new SessionManager(this);
 
-        // Проверяем, если пользователь уже авторизован
-        if (isUserLoggedIn()) {
+        // Убедимся, что администратор существует
+        dbHelper.ensureAdminExists();
+
+        Log.d("LoginActivity", "App started - Checking session");
+        sessionManager.debugPrintAllData();
+
+        // Проверяем, вошел ли пользователь
+        if (sessionManager.isLoggedIn()) {
+            Log.d("LoginActivity", "User already logged in, redirecting to MainActivity");
             redirectToMain();
             return;
         }
@@ -64,7 +72,8 @@ public class LoginActivity extends AppCompatActivity {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
 
-        // Проверки
+        Log.d("LoginActivity", "Login attempt - Email: " + email);
+
         if (email.isEmpty()) {
             Toast.makeText(this, "Введите email", Toast.LENGTH_SHORT).show();
             return;
@@ -75,51 +84,55 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Проверка пользователя в базе данных
-        if (dbHelper.checkUser(email, password)) {
-            // Сохранение данных, если отмечено "Запомнить меня"
+        // Проверяем пользователя в базе данных
+        boolean userExists = dbHelper.checkUser(email, password);
+        Log.d("LoginActivity", "User check result: " + userExists);
+
+        if (userExists) {
+            int userId = dbHelper.getUserId(email);
+            boolean isAdmin = dbHelper.isAdmin(userId);
+
+            Log.d("LoginActivity", "Login successful! UserID: " + userId + ", IsAdmin: " + isAdmin);
+
+            // Сохраняем данные через SessionManager
+            sessionManager.loginUser(userId, email, isAdmin);
+
+            // Для отладки
+            sessionManager.debugPrintAllData();
+
+            // Сохраняем логин/пароль если выбрано "Запомнить меня"
             if (rememberMeCheckbox.isChecked()) {
                 saveCredentials(email, password);
             } else {
                 clearCredentials();
             }
 
-            // Сохраняем ID пользователя И email
-            int userId = dbHelper.getUserId(email);
-            saveUserData(userId, email);
-
             Toast.makeText(this, "Вход выполнен успешно!", Toast.LENGTH_SHORT).show();
 
-            // Переход в главное меню
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         } else {
+            Log.d("LoginActivity", "Login failed - invalid credentials");
             Toast.makeText(this, "Неверный email или пароль", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void saveUserData(int userId, String email) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(Constants.KEY_USER_ID, userId);
-        editor.putString(Constants.KEY_EMAIL, email);
-        editor.putBoolean(Constants.KEY_IS_LOGGED_IN, true); // Флаг авторизации
-        editor.apply();
-    }
-
     private void saveCredentials(String email, String password) {
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(Constants.KEY_EMAIL, email);
-        editor.putString(Constants.KEY_PASSWORD, password);
-        editor.putBoolean(Constants.KEY_REMEMBER_ME, true);
+        editor.putString("saved_email", email);
+        editor.putString("saved_password", password);
+        editor.putBoolean("remember_me", true);
         editor.apply();
     }
 
     private void loadSavedCredentials() {
-        boolean rememberMe = sharedPreferences.getBoolean(Constants.KEY_REMEMBER_ME, false);
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
+        boolean rememberMe = sharedPreferences.getBoolean("remember_me", false);
         if (rememberMe) {
-            String email = sharedPreferences.getString(Constants.KEY_EMAIL, "");
-            String password = sharedPreferences.getString(Constants.KEY_PASSWORD, "");
+            String email = sharedPreferences.getString("saved_email", "");
+            String password = sharedPreferences.getString("saved_password", "");
             emailEditText.setText(email);
             passwordEditText.setText(password);
             rememberMeCheckbox.setChecked(true);
@@ -127,19 +140,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void clearCredentials() {
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove(Constants.KEY_EMAIL);
-        editor.remove(Constants.KEY_PASSWORD);
-        editor.remove(Constants.KEY_REMEMBER_ME);
+        editor.remove("saved_email");
+        editor.remove("saved_password");
+        editor.remove("remember_me");
         editor.apply();
     }
 
-    private boolean isUserLoggedIn() {
-        return sharedPreferences.getBoolean(Constants.KEY_IS_LOGGED_IN, false);
-    }
-
     private void redirectToMain() {
+        Log.d("LoginActivity", "=== REDIRECTING TO MAIN ===");
+        sessionManager.debugPrintAllData();
+
         Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }

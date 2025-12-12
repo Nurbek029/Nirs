@@ -2,6 +2,7 @@ package com.example.nirs;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -16,6 +17,7 @@ public class RegisterActivity extends AppCompatActivity {
     private Button registerButton, loginButton;
     private CheckBox termsCheckbox;
     private DatabaseHelper dbHelper;
+    private SessionManager sessionManager;
 
     // Регулярное выражение для проверки email
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -28,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         dbHelper = new DatabaseHelper(this);
+        sessionManager = new SessionManager(this);
 
         // Инициализация элементов
         emailEditText = findViewById(R.id.email_edit_text);
@@ -87,7 +90,18 @@ public class RegisterActivity extends AppCompatActivity {
         // Регистрация пользователя
         if (dbHelper.addUser(email, password)) {
             Toast.makeText(this, "Регистрация успешна!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+
+            // После успешной регистрации сразу логиним пользователя
+            int userId = dbHelper.getUserId(email);
+            boolean isAdmin = dbHelper.isAdmin(userId);
+
+            Log.d("RegisterActivity", "User registered - ID: " + userId + ", Email: " + email + ", IsAdmin: " + isAdmin);
+
+            // Сохраняем данные пользователя через SessionManager
+            sessionManager.loginUser(userId, email, isAdmin);
+
+            // Переходим сразу в MainActivity
+            Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         } else {

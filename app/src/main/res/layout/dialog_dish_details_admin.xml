@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Изображение блюда -->
+        <ImageView
+            android:id="@+id/dish_image"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:background="#E0E0E0"
+            android:src="@drawable/placeholder_food"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Название -->
+        <TextView
+            android:id="@+id/dish_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Название блюда"
+            android:textColor="#1B5E20"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Цена -->
+        <TextView
+            android:id="@+id/dish_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="0 сом"
+            android:textColor="#1B5E20"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Разделитель -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Описание -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Описание:"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/dish_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Описание блюда..."
+            android:textColor="#757575"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Категория -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Категория:"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/dish_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Горячее"
+            android:textColor="#757575"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Дата приготовления -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Дата приготовления:"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/cook_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="25.11.2024"
+            android:textColor="#757575"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Ингредиенты -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ингредиенты:"
+            android:textColor="#1B5E20"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Мясо, картофель, морковь..."
+            android:textColor="#757575"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Кнопки действий для админа -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="8dp">
+
+            <!-- Кнопка Редактировать -->
+            <Button
+                android:id="@+id/btn_edit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#2196F3"
+                android:text="Редактировать"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <!-- Кнопка Удалить -->
+            <Button
+                android:id="@+id/btn_delete"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="#F44336"
+                android:text="Удалить"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <!-- Кнопка закрытия -->
+        <Button
+            android:id="@+id/close_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#757575"
+            android:text="Закрыть"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>
